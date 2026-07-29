@@ -11,6 +11,7 @@
 
 
 class NauTimelineKeyframePool;
+class NauPrimaryButton;
 
 
 // ** NauTimelineKeyframe
@@ -136,6 +137,7 @@ public:
     [[nodiscard]]
     float currentTime() const noexcept { return m_currentTime; }
     void setCurrentTime(float time) noexcept;
+    void setCreationAvailable(bool available);
     void setKeyframesExpanded(int propertyIndex, bool flag);
     void resetZoom();
 
@@ -205,6 +207,7 @@ private:
         bool expandedFlag = false;
     };
 
+    NauPrimaryButton* m_createClipButton;
     NauMenu* m_keyframeMenu;
     QList<QLine> m_drawingLines;
     QList<QString> m_drawingText;
