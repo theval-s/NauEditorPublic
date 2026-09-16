@@ -335,6 +335,11 @@ void NauUsdInspectorClient::buildProperties(const UsdProxy::UsdProxyPrim& proxyP
             }
         }
 
+        // Skip hidden properties
+        if (prop.second->getPrim().GetAttribute(prop.second->getName()).IsHidden()) {
+            continue;
+        }
+
         // Skip transform properties operations
         if (std::find(transformTokensToSkip.begin(), transformTokensToSkip.end(), prop.second->getName()) != transformTokensToSkip.end()) {
             continue;
