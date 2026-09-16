@@ -31,6 +31,26 @@ namespace
         }
         return str;
     }
+
+    std::string ResolveComponentDisplayName(const pxr::UsdPrim& prim, const std::string& typeName)
+    {
+        std::string key = typeName;
+        if (key == "NauComponent") {
+            if (auto attr = prim.GetAttribute(pxr::TfToken("componentTypeName"))) {
+                std::string real;
+                if (attr.Get(&real) && !real.empty()) {
+                    key = real;
+                }
+            }
+        }
+
+        const auto names = NauUsdPrimFactory::instance()
+            .registeredPrimCreatorsWithDisplayNames([](const std::string&) { return true; });
+        if (auto it = names.find(key); it != names.end()) {
+            return it->second;
+        }
+        return key;
+    }
 }
 
 
@@ -196,13 +216,25 @@ void NauUsdInspectorClient::buildFromPrimInternal(PXR_NS::UsdPrim prim)
             continue;
         }
         
-        const std::string componentTypeName = component.GetTypeName().GetString();
-        //We are forced to postpone the construction of the UI so that the component has time to be created,
+        std::string componentName = component.GetDisplayName();
+        if (componentName.empty())
+        {
+            componentName = component.GetTypeName().GetString();
+        }
+
+        std::string realType;
+        if (auto attr = component.GetAttribute(pxr::TfToken("componentTypeName"))) {
+            attr.Get(&realType);
+        }
+        NED_DEBUG("Inspector component: usdType='{}' componentTypeName='{}' displayName='{}'",
+            componentName, realType, component.GetDisplayName());
+
+        //We are forced to postpon e the construction of the UI so that the component has time to be created,
         //as its creation happens in asynchronous mode.
         QTimer* buildTimer = new QTimer(this);
         buildTimer->setSingleShot(true);
-        connect(buildTimer, &QTimer::timeout, [this, component, componentTypeName, transformTokens]() {
-            buildProperties(component, componentTypeName, transformTokens);
+        connect(buildTimer, &QTimer::timeout, [this, component, componentName, transformTokens]() {
+            buildProperties(component, componentName, transformTokens);
         });
         m_componentBuildTimers.push_back(buildTimer);
         buildTimer->start();
